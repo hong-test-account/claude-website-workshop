@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>hong-test-account/claude-website-workshop</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root {
+    --canvas: #ffffff;
+    --canvas-subtle: #f6f8fa;
+    --canvas-inset: #f6f8fa;
+    --border: #d1d9e0;
+    --border-muted: #d8dee4;
+    --fg: #1f2328;
+    --fg-muted: #59636e;
+    --accent: #0969da;
+    --accent-subtle: #ddf4ff;
+    --green: #1a7f37;
+    --green-emphasis: #1f883d;
+    --header-bg: #24292f;
+    --success: #1a7f37;
+    --btn-bg: #f6f8fa;
+    --btn-border: rgba(31,35,40,0.15);
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  body {
+    margin: 0;
+    background: var(--canvas);
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  svg { display: inline-block; vertical-align: text-bottom; fill: currentColor; }
+
+  /* ---------- header ---------- */
+  header.site {
+    background: var(--header-bg);
+    color: #fff;
+    padding: 0 1rem;
+  }
+  .site-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    height: 62px;
+  }
+  .hamburger, .mark { color: #fff; opacity: .92; }
+  .mark svg { width: 32px; height: 32px; }
+  .crumbs { display: flex; align-items: center; gap: .35rem; font-size: 16px; color: #fff; white-space: nowrap; }
+  .crumbs a { color: #fff; font-weight: 600; }
+  .crumbs .sep { color: #7d8590; }
+  .searchbar {
+    flex: 1;
+    max-width: 480px;
+    display: flex; align-items: center; gap: .5rem;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 6px;
+    padding: .38rem .7rem;
+    color: #7d8590;
+    font-size: 13px;
+  }
+  .searchbar kbd {
+    margin-left: auto;
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 4px;
+    padding: 0 5px;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .site-icons { display: flex; align-items: center; gap: 1rem; margin-left: auto; color: #fff; }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg,#37f0d4,#0969da);
+    display: inline-block;
+  }
+
+  /* ---------- sub nav (tabs) ---------- */
+  nav.tabs { border-bottom: 1px solid var(--border); background: var(--canvas); }
+  .tabs-inner {
+    max-width: 1280px; margin: 0 auto; padding: 0 1rem;
+    display: flex; gap: 1.4rem; overflow-x: auto;
+  }
+  .tab {
+    display: flex; align-items: center; gap: .4rem;
+    padding: .8rem .1rem;
+    color: var(--fg);
+    font-size: 14px;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+  }
+  .tab:hover { text-decoration: none; color: var(--accent); }
+  .tab.active { border-bottom-color: #fd8c73; font-weight: 600; }
+  .tab .count {
+    background: var(--canvas-inset);
+    border-radius: 999px;
+    font-size: 12px;
+    padding: 0 6px;
+    color: var(--fg-muted);
+  }
+
+  /* ---------- layout ---------- */
+  main { max-width: 1280px; margin: 0 auto; padding: 1.2rem 1rem 3rem; }
+
+  .repo-heading {
+    display: flex; align-items: center; gap: .5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .repo-heading .icon { color: var(--fg-muted); }
+  .repo-heading h1 { font-size: 20px; font-weight: 400; margin: 0; }
+  .repo-heading .owner { color: var(--fg-muted); }
+  .repo-heading .name { font-weight: 600; }
+  .visibility-badge {
+    font-size: 12px; font-weight: 500; color: var(--fg-muted);
+    border: 1px solid var(--border); border-radius: 999px;
+    padding: 0 7px; line-height: 18px;
+  }
+  .heading-actions { margin-left: auto; display: flex; gap: .5rem; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: .35rem;
+    background: var(--btn-bg);
+    border: 1px solid var(--btn-border);
+    border-radius: 6px;
+    padding: .32rem .7rem;
+    font-size: 12px; font-weight: 500;
+    color: var(--fg);
+    cursor: default;
+  }
+  .btn .n {
+    background: var(--canvas);
+    border-radius: 999px;
+    padding: 0 6px;
+    font-size: 11px;
+    border: 1px solid var(--border);
+    margin-left: .2rem;
+  }
+  .btn-green {
+    background: var(--green-emphasis);
+    border-color: rgba(31,35,40,0.15);
+    color: #fff;
+  }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr 296px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  .toolbar {
+    display: flex; align-items: center; gap: .6rem;
+    margin-bottom: .8rem;
+    flex-wrap: wrap;
+  }
+  .branch-pill, .goto-file {
+    display: flex; align-items: center; gap: .35rem;
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: .32rem .7rem; font-size: 13px; background: var(--btn-bg);
+    color: var(--fg);
+  }
+  .goto-file { flex: 1; max-width: 320px; color: var(--fg-muted); background: var(--canvas); }
+  .goto-file .kbd { margin-left: auto; border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; font-size: 11px; }
+  .toolbar .spacer { flex: 1; }
+  .code-btn { background: var(--green-emphasis); color: #fff; }
+
+  /* file table */
+  .file-panel { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 1.4rem; }
+  .file-panel-head {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .65rem 1rem;
+    background: var(--canvas-subtle);
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .file-panel-head .who { font-weight: 600; }
+  .file-panel-head .msg { color: var(--fg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-panel-head .meta { margin-left: auto; display: flex; align-items: center; gap: .8rem; color: var(--fg-muted); }
+
+  table.files { width: 100%; border-collapse: collapse; }
+  table.files tr { border-top: 1px solid var(--border-muted); }
+  table.files tr:first-child { border-top: none; }
+  table.files tr:hover { background: var(--accent-subtle); }
+  table.files td { padding: .5rem 1rem; font-size: 13px; }
+  td.f-icon { width: 20px; color: var(--fg-muted); padding-right: 0; }
+  td.f-name a { color: var(--accent); }
+  td.f-name a:hover { text-decoration: underline; }
+  td.f-msg { color: var(--fg-muted); max-width: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  td.f-time { color: var(--fg-muted); text-align: right; white-space: nowrap; }
+  tr.new-row { background: #ddf4ff; }
+  tr.new-row:hover { background: #cbecff; }
+
+  /* readme */
+  .readme-panel { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .readme-head {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .7rem 1rem;
+    background: var(--canvas-subtle);
+    border-bottom: 1px solid var(--border);
+    font-weight: 600; font-size: 14px;
+  }
+  .readme-body { padding: 1.6rem 2rem 2rem; }
+  .readme-body h1 { font-size: 1.8rem; border-bottom: 1px solid var(--border-muted); padding-bottom: .3rem; margin: 0 0 1rem; }
+  .readme-body h2 { font-size: 1.3rem; border-bottom: 1px solid var(--border-muted); padding-bottom: .3rem; margin: 1.8rem 0 .8rem; }
+  .readme-body p { margin: 0 0 1rem; color: var(--fg); }
+  .readme-body ul { margin: 0 0 1rem 1.4rem; }
+  .readme-body li { margin-bottom: .3rem; }
+  .readme-body code { background: var(--canvas-inset); border-radius: 4px; padding: .1rem .4rem; font-family: var(--mono); font-size: 85%; }
+  .readme-body pre { background: var(--canvas-inset); border-radius: 6px; padding: 1rem; overflow-x: auto; margin-bottom: 1rem; }
+  .readme-body pre code { background: none; padding: 0; }
+  .readme-body hr { border: none; border-top: 1px solid var(--border-muted); margin: 1.6rem 0; }
+  .readme-body table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; font-size: 13px; }
+  .readme-body th, .readme-body td { border: 1px solid var(--border-muted); padding: .4rem .8rem; text-align: left; }
+  .readme-body th { background: var(--canvas-subtle); }
+
+  /* sidebar */
+  .side-section { border-bottom: 1px solid var(--border-muted); padding-bottom: 1.2rem; margin-bottom: 1.2rem; }
+  .side-section h2 { font-size: 14px; margin: 0 0 .7rem; }
+  .side-section p { margin: 0 0 .6rem; font-size: 13px; }
+  .side-link { display: flex; align-items: center; gap: .5rem; font-size: 13px; margin-bottom: .55rem; color: var(--fg); }
+  .side-link svg { color: var(--fg-muted); }
+  .side-link.link { color: var(--accent); }
+  .side-stat { display: flex; align-items: center; gap: .5rem; font-size: 13px; margin-bottom: .55rem; }
+  .side-stat svg { color: var(--fg-muted); }
+  .no-content { font-size: 13px; color: var(--fg-muted); }
+  .deploy-row { display: flex; align-items: center; gap: .5rem; font-size: 13px; }
+  .deploy-badge { display: flex; align-items: center; gap: .3rem; color: var(--green); font-weight: 500; }
+  .deploy-when { color: var(--fg-muted); margin-left: auto; }
+  .contrib-row { display: flex; align-items: center; gap: .55rem; margin-bottom: .6rem; font-size: 13px; }
+  .contrib-avatar { width: 20px; height: 20px; border-radius: 50%; flex: none; }
+  .contrib-avatar.hong { background: linear-gradient(135deg,#ffb454,#ff5f57); }
+  .contrib-avatar.claude { background: #fff; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: #d97757; font-weight: 700; font-size: 11px; }
+  .contrib-avatar.bot { background: #24292f; }
+  .contrib-name { color: var(--fg-muted); }
+  .lang-bar { display: flex; height: 8px; border-radius: 999px; overflow: hidden; margin-bottom: .7rem; }
+  .lang-bar span:nth-child(1) { background: #e34c26; flex: 62; }
+  .lang-bar span:nth-child(2) { background: #f1e05a; flex: 22; }
+  .lang-bar span:nth-child(3) { background: #3572A5; flex: 16; }
+  .lang-list { display: flex; flex-wrap: wrap; gap: .4rem 1rem; font-size: 12px; }
+  .lang-list li { display: flex; align-items: center; gap: .35rem; list-style: none; }
+  .lang-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .lang-dot.html { background: #e34c26; }
+  .lang-dot.json { background: #f1e05a; }
+  .lang-dot.shell { background: #3572A5; }
+
+  @media (max-width: 900px) {
+    .content-grid { grid-template-columns: 1fr; }
+    .searchbar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+  <header class="site">
+    <div class="site-inner">
+      <span class="hamburger">
+        <svg height="16" viewBox="0 0 16 16" width="16"><path d="M1 2.75A.75.75 0 0 1 1.75 2h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 2.75Zm0 5A.75.75 0 0 1 1.75 7h12.5a.75.75 0 0 1 0 1.5H1.75A.75.75 0 0 1 1 7.75ZM1.75 12h12.5a.75.75 0 0 1 0 1.5H1.75a.75.75 0 0 1 0-1.5Z"></path></svg>
+      </span>
+      <span class="mark">
+        <svg viewBox="0 0 16 16" width="32" height="32"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path></svg>
+      </span>
+      <div class="crumbs">
+        <a href="#">hong-test-account</a>
+        <span class="sep">/</span>
+        <a href="#"><b>claude-website-workshop</b></a>
+      </div>
+      <div class="searchbar">
+        <svg height="14" viewBox="0 0 16 16" width="14"><path d="M15.7 13.3 11.3 9a5.9 5.9 0 1 0-2.3 2.3l4.3 4.4 1.4-1.4ZM6.5 11a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9Z"></path></svg>
+        Type <kbd>/</kbd> to search
+      </div>
+      <div class="site-icons">
+        <svg height="18" viewBox="0 0 16 16" width="18"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16Zm.5-12a.5.5 0 0 0-1 0v4.6a.75.75 0 0 0 .28.58l3 2.5.96-1.15L8.5 8.35Z" fill-rule="evenodd"></path></svg>
+        <svg height="18" viewBox="0 0 16 16" width="18"><path d="M8 16a2 2 0 0 0 1.985-1.75h-3.97A2 2 0 0 0 8 16ZM8 1.5A4.5 4.5 0 0 0 3.5 6c0 3.5-1.5 4.5-1.5 5.5 0 .5.5 1 1 1h10c.5 0 1-.5 1-1 0-1-1.5-2-1.5-5.5A4.5 4.5 0 0 0 8 1.5Z"></path></svg>
+        <span class="avatar"></span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <div class="tabs-inner">
+      <a class="tab active" href="#">
+        <svg height="16" viewBox="0 0 16 16" width="16"><path d="M4.72 3.22a.75.75 0 0 1 1.06 1.06L2.06 8l3.72 3.72a.75.75 0 1 1-1.06 1.06L.47 8.53a.75.75 0 0 1 0-1.06l4.25-4.25Zm6.56 0a.75.75 0 1 0-1.06 1.06L13.94 8l-3.72 3.72a.75.75 0 1 0 1.06 1.06l4.25-4.25a.75.75 0 0 0 0-1.06l-4.25-4.25Z"></path></svg>
+        Code
+      </a>
+      <a class="tab" href="#">
+        <svg height="16" viewBox="0 0 16 16" width="16"><path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"></path><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0ZM1.5 8a6.5 6.5 0 1 1 13 0 6.5 6.5 0 0 1-13 0Z"></path></svg>
+        Issues
+      </a>
+      <a class="tab" href="#">
+        <svg height="16" viewBox="0 0 16 16" width="16"><path d="M5 3.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm0 9.5a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"></path></svg>
+        Pull requests
+      </a>
+      <a class="tab" href="#">
+        <svg height="16" viewBox="0 0 16 16" width="16"><path d="M1.5 8a6.5 6.5 0 1 1 13 0 6.5 6.5 0 0 1-13 0Z"></path></svg>
+        Actions
+      </a>
+      <a class="tab" href="#">
+        <svg height="16" viewBox="0 0 16 16" width="16"><path d="M1.75 0h12.5C15.216 0 16 .784 16 1.75v12.5A1.75 1.75 0 0 1 14.25 16H1.75A1.75 1.75 0 0 1 0 14.25V1.75C0 .784.784 0 1.75 0Z"></path></svg>
+        Projects
+      </a>
+      <a class="tab" href="#">
+        <svg height="16" viewBox="0 0 16 16" width="16"><path d="M8 0a8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8 8 8 0 0 0-8-8Z"></path></svg>
+        Security
+      </a>
+      <a class="tab" href="#">
+        <svg height="16" viewBox="0 0 16 16" width="16"><path d="M1.5 1.75V13.5h13.75a.75.75 0 0 1 0 1.5H.75a.75.75 0 0 1-.75-.75V1.75a.75.75 0 0 1 1.5 0Z"></path></svg>
+        Insights
+      </a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="repo-heading">
+      <span class="icon">
+        <svg height="16" viewBox="0 0 16 16" width="16"><path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2H4.5a1 1 0 0 0-.994 1.117l.03.183A1.75 1.75 0 0 0 5.25 13h.5a.75.75 0 0 1 0 1.5h-.5A3.25 3.25 0 0 1 2 11.25v-.5a.75.75 0 0 1 1.5 0v.5a3.243 3.243 0 0 1 1-2.379V2.5Z"></path></svg>
+      </span>
+      <h1><span class="owner">hong-test-account</span> / <span class="name">claude-website-workshop</span></h1>
+      <span class="visibility-badge">Public</span>
+      <div class="heading-actions">
+        <span class="btn">
+          <svg height="14" viewBox="0 0 16 16" width="14"><path d="M8 2c1.981 0 3.671.992 4.933 2.078 1.27 1.091 2.187 2.345 2.637 3.023a1.62 1.62 0 0 1 0 1.798c-.45.678-1.367 1.932-2.637 3.023C11.67 13.008 9.981 14 8 14c-1.981 0-3.671-.992-4.933-2.078C1.797 10.83.88 9.576.43 8.898a1.62 1.62 0 0 1 0-1.798c.45-.677 1.367-1.931 2.637-3.022C4.33 2.992 6.019 2 8 2ZM8 12.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0-7a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"></path></svg>
+          Watch <span class="n">0</span>
+        </span>
+        <span class="btn">
+          <svg height="14" viewBox="0 0 16 16" width="14"><path d="M5 5.372v.878c0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75v-.878a2.25 2.25 0 1 1 1.5 0v.878a2.25 2.25 0 0 1-2.25 2.25h-1.5v2.128a2.251 2.251 0 1 1-1.5 0V8.5h-1.5A2.25 2.25 0 0 1 3.5 6.25v-.878a2.25 2.25 0 1 1 1.5 0ZM5 3.25a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Zm6.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm-3 8.75a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Z"></path></svg>
+          Fork <span class="n">1</span>
+        </span>
+        <span class="btn">
+          <svg height="14" viewBox="0 0 16 16" width="14"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"></path></svg>
+          Star <span class="n">0</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="content-grid">
+      <div>
+        <div class="toolbar">
+          <span class="branch-pill">
+            <svg height="14" viewBox="0 0 16 16" width="14"><path d="M9.5 3.25a2.25 2.25 0 1 1 3 2.122V6A2.5 2.5 0 0 1 10 8.5H6a1 1 0 0 0-1 1v1.128a2.251 2.251 0 1 1-1.5 0V5.372a2.25 2.25 0 1 1 1.5 0v1.836A2.492 2.492 0 0 1 6 7h4a1 1 0 0 0 1-1v-.628A2.25 2.25 0 0 1 9.5 3.25Z"></path></svg>
+            main
+          </span>
+          <span class="btn">1 Branch</span>
+          <span class="btn">0 Tags</span>
+          <span class="goto-file">
+            <svg height="14" viewBox="0 0 16 16" width="14"><path d="M15.7 13.3 11.3 9a5.9 5.9 0 1 0-2.3 2.3l4.3 4.4 1.4-1.4ZM6.5 11a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9Z"></path></svg>
+            Go to file
+            <span class="kbd">T</span>
+          </span>
+          <span class="spacer"></span>
+          <span class="btn">Add file</span>
+          <span class="btn code-btn">
+            &lt;&gt; Code
+          </span>
+        </div>
+
+        <div class="file-panel">
+          <div class="file-panel-head">
+            <span class="contrib-avatar hong" style="width:20px;height:20px;border-radius:50%;"></span>
+            <span class="who">hong-test-account</span>
+            <span class="msg">Add git-repo.html — GitHub repo UI clone page</span>
+            <span class="meta">
+              <span>d147bf5</span> <span>·</span> <span>just now</span>
+              <svg height="16" viewBox="0 0 16 16" width="16"><path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0Zm.75 4a.75.75 0 0 0-1.5 0v4c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V4Z"></path></svg>
+              10 Commits
+            </span>
+          </div>
+          <table class="files">
+            <tr>
+              <td class="f-icon">📁</td>
+              <td class="f-name"><a href="#">.claude/skills</a></td>
+              <td class="f-msg">Add repeat-3 skill</td>
+              <td class="f-time">now</td>
+            </tr>
+            <tr>
+              <td class="f-icon">📁</td>
+              <td class="f-name"><a href="#">.github/workflows</a></td>
+              <td class="f-msg">github-action</td>
+              <td class="f-time">last month</td>
+            </tr>
+            <tr>
+              <td class="f-icon">📄</td>
+              <td class="f-name"><a href="#">CLAUDE.md</a></td>
+              <td class="f-msg">Initial Commit</td>
+              <td class="f-time">last month</td>
+            </tr>
+            <tr>
+              <td class="f-icon">📄</td>
+              <td class="f-name"><a href="#">README.md</a></td>
+              <td class="f-msg">update doc</td>
+              <td class="f-time">last month</td>
+            </tr>
+            <tr>
+              <td class="f-icon">📄</td>
+              <td class="f-name"><a href="bakery.html">bakery.html</a></td>
+              <td class="f-msg">update page</td>
+              <td class="f-time">last month</td>
+            </tr>
+            <tr class="new-row">
+              <td class="f-icon">📄</td>
+              <td class="f-name"><a href="git-repo.html">git-repo.html</a></td>
+              <td class="f-msg">Add git-repo.html — GitHub repo UI clone page</td>
+              <td class="f-time">now</td>
+            </tr>
+            <tr>
+              <td class="f-icon">📄</td>
+              <td class="f-name"><a href="index.html">index.html</a></td>
+              <td class="f-msg">Add link to git-repo.html</td>
+              <td class="f-time">now</td>
+            </tr>
+            <tr>
+              <td class="f-icon">📄</td>
+              <td class="f-name"><a href="reading-fast.html">reading-fast.html</a></td>
+              <td class="f-msg">update page</td>
+              <td class="f-time">last month</td>
+            </tr>
+            <tr>
+              <td class="f-icon">📄</td>
+              <td class="f-name"><a href="#">skills-lock.json</a></td>
+              <td class="f-msg">Install wait-what skill from mattpocock/skills</td>
+              <td class="f-time">12 minutes ago</td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="readme-panel">
+          <div class="readme-head">
+            <svg height="16" viewBox="0 0 16 16" width="16"><path d="M0 1.75A.75.75 0 0 1 .75 1h4.253c1.227 0 2.317.59 3 1.501A3.743 3.743 0 0 1 11.006 1h4.245a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75h-4.507a2.25 2.25 0 0 0-1.591.659l-.622.621a.75.75 0 0 1-1.06 0l-.622-.621A2.25 2.25 0 0 0 5.258 13H.75a.75.75 0 0 1-.75-.75Z"></path></svg>
+            README
+          </div>
+          <div class="readme-body">
+            <h1>Claude Website Workshop</h1>
+            <p>Workshop ลงมือสร้างเว็บไซต์จริงด้วย Claude Code — ตั้งแต่ติดตั้งจนถึงสร้างเว็บด้วย AI</p>
+            <hr>
+            <h2>ก่อนเริ่ม (Prerequisites)</h2>
+            <ul>
+              <li><a href="#">Node.js</a> v18+</li>
+              <li>npm (ติดมากับ Node.js)</li>
+              <li><a href="#">Anthropic API Key</a></li>
+            </ul>
+            <h2>หน้าเว็บในโปรเจกต์นี้</h2>
+            <table>
+              <tr><th>ไฟล์</th><th>สไตล์</th><th>คำอธิบาย</th></tr>
+              <tr><td><code>index.html</code></td><td>Terminal / dev-lab</td><td>หน้าหลัก รวม link ไปทุกหน้า</td></tr>
+              <tr><td><code>bakery.html</code></td><td>Dark luxury / French</td><td>ร้านเบเกอรี่ มี cart และ filter สินค้า</td></tr>
+              <tr><td><code>reading-fast.html</code></td><td>Editorial brutalist</td><td>Landing page ขาย e-book วิธีอ่านหนังสือเร็ว</td></tr>
+              <tr><td><code>git-repo.html</code></td><td>GitHub repo replica</td><td>หน้าจำลอง UI ของ GitHub repository page</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <aside>
+        <div class="side-section">
+          <h2>About</h2>
+          <p>claude-website-workshop</p>
+          <div class="side-link">
+            <svg height="16" viewBox="0 0 16 16" width="16"><path d="M0 1.75A.75.75 0 0 1 .75 1h4.253c1.227 0 2.317.59 3 1.501A3.743 3.743 0 0 1 11.006 1h4.245a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75h-4.507a2.25 2.25 0 0 0-1.591.659l-.622.621a.75.75 0 0 1-1.06 0l-.622-.621A2.25 2.25 0 0 0 5.258 13H.75a.75.75 0 0 1-.75-.75Z"></path></svg>
+            <a href="#" class="link">Readme</a>
+          </div>
+          <div class="side-link">
+            <svg height="16" viewBox="0 0 16 16" width="16"><path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"></path><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0ZM1.5 8a6.5 6.5 0 1 1 13 0 6.5 6.5 0 0 1-13 0Z"></path></svg>
+            <a href="#" class="link">Activity</a>
+          </div>
+          <div class="side-stat">
+            <svg height="16" viewBox="0 0 16 16" width="16"><path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.75.75 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"></path></svg>
+            0 stars
+          </div>
+          <div class="side-stat">
+            <svg height="16" viewBox="0 0 16 16" width="16"><path d="M8 0a8 8 0 0 0-8 8 8 8 0 0 0 8 8 8 8 0 0 0 8-8 8 8 0 0 0-8-8Z"></path></svg>
+            0 watching
+          </div>
+          <div class="side-stat">
+            <svg height="16" viewBox="0 0 16 16" width="16"><path d="M5 5.372v.878c0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75v-.878a2.25 2.25 0 1 1 1.5 0v.878a2.25 2.25 0 0 1-2.25 2.25h-1.5v2.128a2.251 2.251 0 1 1-1.5 0V8.5h-1.5A2.25 2.25 0 0 1 3.5 6.25v-.878a2.25 2.25 0 1 1 1.5 0Z"></path></svg>
+            1 fork
+          </div>
+          <p style="margin-top:.7rem;"><a href="#">Report repository</a></p>
+        </div>
+
+        <div class="side-section">
+          <h2>Releases</h2>
+          <p class="no-content">No releases published</p>
+        </div>
+
+        <div class="side-section">
+          <h2>Deployments&nbsp;&nbsp;<span style="color:var(--fg-muted); font-weight:400;">5</span></h2>
+          <div class="deploy-row">
+            <span class="deploy-badge">
+              <svg height="14" viewBox="0 0 16 16" width="14"><path d="M8 16A8 8 0 1 1 8 0a8 8 0 0 1 0 16Zm3.78-9.72a.75.75 0 0 0-1.06-1.06L6.75 9.19 5.28 7.72a.75.75 0 0 0-1.06 1.06l2 2a.75.75 0 0 0 1.06 0l4.5-4.5Z"></path></svg>
+              github-pages
+            </span>
+            <span class="deploy-when">last week</span>
+          </div>
+        </div>
+
+        <div class="side-section">
+          <h2>Packages</h2>
+          <p class="no-content">No packages published</p>
+        </div>
+
+        <div class="side-section">
+          <h2>Contributors&nbsp;&nbsp;<span style="color:var(--fg-muted); font-weight:400;">3</span></h2>
+          <div class="contrib-row">
+            <span class="contrib-avatar hong"></span>
+            <span>hong-test-account</span>
+          </div>
+          <div class="contrib-row">
+            <span class="contrib-avatar claude">✳</span>
+            <span>Claude</span>
+          </div>
+          <div class="contrib-row">
+            <span class="contrib-avatar bot"></span>
+            <span class="contrib-name">github-actions[bot]</span>
+          </div>
+        </div>
+
+        <div class="side-section" style="border-bottom:none;">
+          <h2>Languages</h2>
+          <div class="lang-bar"><span></span><span></span><span></span></div>
+          <ul class="lang-list">
+            <li><span class="lang-dot html"></span>HTML 62.4%</li>
+            <li><span class="lang-dot json"></span>JSON 22.1%</li>
+            <li><span class="lang-dot shell"></span>Shell 15.5%</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+</body>
+</html>
