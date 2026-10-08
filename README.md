@@ -140,3 +140,4 @@ Skills คือ slash command พิเศษที่ติดตั้งเ�
 Workshop material — สำหรับการเรียนรู้
 
 This line was added to test the GitHub connector.
+
